@@ -190,221 +190,92 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
+import { useTasksStore } from '../stores/tasks'
 
 // Get API base URL from runtime config
 const config = useRuntimeConfig()
 const apiBase = config.public.apiBase
 
-// Authentication state
-const isAuthenticated = ref(false)
-const isLoggingIn = ref(false)
-const loginError = ref('')
-const currentUser = ref(null)
-const loginForm = ref({
-  email: '',
-  password: ''
-})
+const auth = useAuthStore()
+const tasks = useTasksStore()
 
-// Task state
+const isAuthenticated = computed(() => auth.isAuthenticated())
+const isLoggingIn = computed(() => auth.isLoggingIn)
+const loginError = computed(() => auth.loginError)
+const currentUser = computed(() => auth.user)
+
+const loginForm = ref({ email: '', password: '' })
+
+// Task state local helpers
 const newTask = ref('')
 const selectedDate = ref(null)
-const allDates = ref([])
 const today = computed(() => new Date().toISOString().split('T')[0])
 
-onMounted(() => {
-  // Check if already authenticated
-  const token = localStorage.getItem('auth_token')
-  const user = localStorage.getItem('user')
-  
-  if (token && user) {
-    isAuthenticated.value = true
-    currentUser.value = JSON.parse(user)
+onMounted(async () => {
+  auth.init()
+  if (auth.isAuthenticated()) {
     selectedDate.value = today.value
-    fetchTaskDates()
+    await tasks.fetchTasks(apiBase)
   }
 })
 
 const handleLogin = async () => {
-  isLoggingIn.value = true
-  loginError.value = ''
+  auth.isLoggingIn = true
+  auth.loginError = ''
 
   try {
     const response = await fetch(`${apiBase}/api/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: loginForm.value.email,
-        password: loginForm.value.password
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: loginForm.value.email, password: loginForm.value.password })
     })
 
     const data = await response.json()
 
     if (response.ok && data.token) {
-      // Save token and user to localStorage
-      localStorage.setItem('auth_token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-      
-      isAuthenticated.value = true
-      currentUser.value = data.user
+      auth.setAuth(data.token, data.user)
       selectedDate.value = today.value
-      
-      // Clear form
       loginForm.value = { email: '', password: '' }
-      
-      // Fetch tasks
-      fetchTaskDates()
+      await tasks.fetchTasks(apiBase)
     } else {
-      loginError.value = data.message || 'Login failed'
+      auth.loginError = data.message || 'Login failed'
     }
   } catch (error) {
     console.error('Login error:', error)
-    loginError.value = 'An error occurred during login'
+    auth.loginError = 'An error occurred during login'
   } finally {
-    isLoggingIn.value = false
+    auth.isLoggingIn = false
   }
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('auth_token')
-  localStorage.removeItem('user')
-  isAuthenticated.value = false
-  currentUser.value = null
-  allDates.value = []
+  auth.clearAuth()
+  tasks.allDates = []
   newTask.value = ''
-}
-
-const fetchTaskDates = async () => {
-  try {
-    const token = localStorage.getItem('auth_token')
-    console.log('Token:', token)
-    console.log('API Base:', apiBase)
-    
-    const response = await fetch(`${apiBase}/api/tasks`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
-    console.log('Response status:', response.status)
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log('Tasks data:', data)
-      
-      if (data.data && Array.isArray(data.data)) {
-        // Extract dates from the date field (which is the task's assigned date)
-        const dates = data.data
-          .map((task) => {
-            // Use the date field which is in YYYY-MM-DD format
-            if (task.date) {
-              return task.date
-            }
-            return null
-          })
-          .filter((date) => date !== null)
-          .sort()
-          .reverse()
-        
-        // Remove duplicates
-        allDates.value = [...new Set(dates)]
-        console.log('All dates from task.date field:', allDates.value)
-      }
-    } else {
-      console.log('Response error:', response.status, await response.text())
-      // Show sample data for testing
-      showSampleDates()
-    }
-  } catch (error) {
-    console.error('Error fetching tasks:', error)
-    // Show sample data for testing
-    showSampleDates()
-  }
-}
-
-const showSampleDates = () => {
-  const today = new Date().toISOString().split('T')[0]
-  const dates = []
-  
-  // Add some sample dates
-  for (let i = 0; i < 15; i++) {
-    const date = new Date()
-    date.setDate(date.getDate() - i)
-    dates.push(date.toISOString().split('T')[0])
-  }
-  
-  allDates.value = dates
-  console.log('Using sample dates:', dates)
+  selectedDate.value = null
 }
 
 const formatDate = (dateString) => {
   const date = new Date(dateString + 'T00:00:00')
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric'
-  })
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
 }
 
-const groupedDates = computed(() => {
-  const now = new Date()
-  const todayDate = new Date(today.value)
-  const oneWeekAgo = new Date(todayDate)
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-  const recent = []
-  const lastWeek = []
-  const older = []
-
-  allDates.value.forEach((dateString) => {
-    if (dateString === today.value) return // Skip today as it's shown separately
-
-    const date = new Date(dateString + 'T00:00:00')
-
-    if (date > oneWeekAgo && date < todayDate) {
-      recent.push(dateString)
-    } else if (date >= oneWeekAgo && date <= todayDate) {
-      lastWeek.push(dateString)
-    } else {
-      older.push(dateString)
-    }
-  })
-
-  return { recent, lastWeek, older }
-})
+const groupedDates = computed(() => tasks.groupedDates)
 
 const addTask = async () => {
   if (!newTask.value.trim()) return
 
-  try {
-    const token = localStorage.getItem('auth_token')
-    const response = await fetch(`${apiBase}/api/tasks`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        description: newTask.value,
-        date: selectedDate.value || today.value, // Optional: use selected date or today
-        status: 'pending',
-        priority: 'medium'
-      })
-    })
+  const payload = {
+    description: newTask.value,
+    date: selectedDate.value || today.value,
+    status: 'pending',
+    priority: 'medium'
+  }
 
-    if (response.ok) {
-      newTask.value = ''
-      // Refresh the dates list after adding a task
-      await fetchTaskDates()
-      console.log('Task added successfully')
-    } else {
-      console.error('Failed to add task:', response.status)
-    }
-  } catch (error) {
-    console.error('Error adding task:', error)
+  const ok = await tasks.addTask(apiBase, payload)
+  if (ok) {
+    newTask.value = ''
   }
 }
 </script>

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::apiResource('tasks', TaskController::class)->middleware('auth:sanctum');
 
+Route::get('/task-dates', [TaskController::class, 'groupedDates'])->middleware('auth:sanctum');
+
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
