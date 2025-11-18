@@ -21,7 +21,7 @@ class TaskRepository implements TaskRepositoryInterface
     public function getUserTasks($userId): Collection
     {
         return Task::where('user_id', $userId)
-                ->orderBy('id', 'desc')->get();
+            ->orderBy('id', 'desc')->get();
     }
 
     /**
@@ -70,5 +70,11 @@ class TaskRepository implements TaskRepositoryInterface
     {
         return $task->delete();
     }
-}
 
+    public function updateMultipleTasks(array $tasksData): void
+    {
+       $tasksArray = array_map(fn($task) => (array) $task, $tasksData);
+        logger('data', $tasksArray);
+        Task::massUpdate($tasksArray);
+    }
+}

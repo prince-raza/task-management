@@ -11,6 +11,9 @@ use App\Repositories\TaskRepositoryInterface;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+
+use function Laravel\Prompts\info;
 
 class TaskController extends Controller
 {
@@ -95,6 +98,26 @@ class TaskController extends Controller
         $task = $this->tasks->getTaskById($id);
 
         $this->tasks->deleteTask($task);
+
+        return response()->noContent();
+    }
+
+    /**
+     * Bulk update tasks in the database.
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function bulkUpdate(Request $request)
+    {
+        $tasksData = $request->input('ordered');
+
+        foreach ($tasksData as $taskData) {
+            $task = $this->tasks->getTaskById($taskData['id']);
+            $this->authorize('update', $task);
+        }
+
+        $this->tasks->updateMultipleTasks($tasksData);
 
         return response()->noContent();
     }

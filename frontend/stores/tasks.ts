@@ -50,6 +50,7 @@ export const useTasksStore = defineStore('tasks', () => {
   }
 
   const addTask = async (apiBase: string, payload: any) => {
+    console.log('Adding task with payload:', payload)
     try {
       const auth = useAuthStore()
       const token = auth.token

@@ -30,6 +30,11 @@ class StoreTaskRequest extends FormRequest
                 'string',
                 'max:1000',
             ],
+            'order' => [
+                'required',
+                'integer',
+                'min:1',
+            ],
             'date' => [
                 'required',
                 'date',

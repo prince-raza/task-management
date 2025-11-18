@@ -25,7 +25,7 @@ class TaskFactory extends Factory
         return [
             'user_id' => User::factory(),
             'description' => fake()->sentence(),
-            'order' => self::$orderCounter++,
+            'order' => 1,
             'date' => fake()->dateTimeBetween('-1 month', '+1 month'),
             'status' => fake()->randomElement(TaskStatus::getValues()),
             'priority' => fake()->randomElement(TaskPriority::getValues()),

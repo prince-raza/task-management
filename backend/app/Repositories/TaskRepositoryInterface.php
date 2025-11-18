@@ -17,5 +17,6 @@ interface TaskRepositoryInterface
     public function getTaskById($id);
     public function updateTask($task, array $data);
     public function deleteTask($task);
+    public function updateMultipleTasks(array $tasksData): void;
 }
 
