@@ -10,6 +10,8 @@ export const useAuthStore = defineStore('auth', () => {
   const init = () => {
     const t = localStorage.getItem('auth_token')
     const u = localStorage.getItem('user')
+
+    console.log('auth init', t, u)
     if (t && u) {
       token.value = t
       try {

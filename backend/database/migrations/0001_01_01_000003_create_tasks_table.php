@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->text('description');
+            $table->integer('order');
             $table->date('date');
             $table->string('status');
             $table->string('priority');

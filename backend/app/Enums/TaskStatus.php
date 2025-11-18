@@ -14,13 +14,6 @@ use BenSampo\Enum\Enum;
 final class TaskStatus extends Enum
 {
     /**
-     * Pending status
-     *
-     * @var string
-     */
-    public const PENDING = 'pending';
-
-    /**
      * In progress status
      *
      * @var string
@@ -33,12 +26,5 @@ final class TaskStatus extends Enum
      * @var string
      */
     public const COMPLETED = 'completed';
-
-    /**
-     * Cancelled status
-     *
-     * @var string
-     */
-    public const CANCELLED = 'cancelled';
 }
 

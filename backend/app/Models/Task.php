@@ -20,6 +20,7 @@ class Task extends Model
     protected $fillable = [
         'user_id',
         'description',
+        'order',
         'date',
         'status',
         'priority',
@@ -34,8 +35,6 @@ class Task extends Model
     {
         return [
             'date' => 'date',
-            'status' => TaskStatus::class,
-            'priority' => TaskPriority::class,
         ];
     }
 

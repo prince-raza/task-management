@@ -2,8 +2,17 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useAuthStore } from './auth'
 
+export interface Task {
+  id: number
+  description: string
+  date: string
+  status: 'pending' | 'completed'
+  priority: 'low' | 'medium' | 'high'
+}
+
 export const useTasksStore = defineStore('tasks', () => {
   const allDates = ref<string[]>([])
+  const allTasks = ref<Task[]>([])
 
   const fetchTasks = async (apiBase: string) => {
     try {
@@ -27,6 +36,7 @@ export const useTasksStore = defineStore('tasks', () => {
             .reverse()
 
           allDates.value = Array.from(new Set(dates as string[]))
+          allTasks.value = data.data
           return
         }
       }
@@ -78,6 +88,10 @@ export const useTasksStore = defineStore('tasks', () => {
     allDates.value = dates
   }
 
+  const getTasksByDate = (date: string) => {
+    return allTasks.value.filter((t) => t.date === date)
+  }
+
   const groupedDates = computed(() => {
     const todayVal = new Date().toISOString().split('T')[0] || ''
     const oneWeekAgo = new Date(todayVal + 'T00:00:00')
@@ -105,9 +119,11 @@ export const useTasksStore = defineStore('tasks', () => {
 
   return {
     allDates,
+    allTasks,
     fetchTasks,
     addTask,
     showSampleDates,
+    getTasksByDate,
     groupedDates
   }
 })

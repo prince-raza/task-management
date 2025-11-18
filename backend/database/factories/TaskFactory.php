@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class TaskFactory extends Factory
 {
+    protected static int $orderCounter = 1;
+
     /**
      * Define the model's default state.
      *
@@ -23,10 +25,10 @@ class TaskFactory extends Factory
         return [
             'user_id' => User::factory(),
             'description' => fake()->sentence(),
+            'order' => self::$orderCounter++,
             'date' => fake()->dateTimeBetween('-1 month', '+1 month'),
             'status' => fake()->randomElement(TaskStatus::getValues()),
             'priority' => fake()->randomElement(TaskPriority::getValues()),
         ];
     }
 }
-
