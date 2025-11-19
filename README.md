@@ -173,6 +173,26 @@ You can generate new Pest tests with artisan:
 
 Refer to `tests/Feature` and `tests/Unit` for examples of how to structure Pest tests in this project.
 
+### Sanctum & CORS Configuration
+
+Ensure backend and frontend env values match so Sanctum cookies work when the Nuxt app runs on `http://localhost:3000`.
+
+1. Copy `.env.example` to `.env` and set:
+   ```env
+   APP_URL=http://localhost
+   FRONTEND_URL=http://localhost:3000
+   SESSION_DOMAIN=localhost
+   SANCTUM_STATEFUL_DOMAINS=localhost,localhost:3000
+   ```
+   Adjust host/port if you expose Laravel on `http://localhost:8000` or the frontend on another port.
+2. Clear cached config:
+   ```bash
+   ./vendor/bin/sail artisan config:clear
+   ```
+3. Make sure the frontend HTTP client sends credentials (e.g. Axios `withCredentials: true`) so Sanctum can attach cookies.
+
+With these values and the default `config/cors.php` in this repo, `http://localhost:3000` can talk to the API without CORS errors.
+
 ### API Endpoints
 
 The backend provides a RESTful API. Make sure to configure your frontend to point to the correct API base URL (default with Sail: `http://localhost` or the port specified in `APP_PORT` environment variable).
