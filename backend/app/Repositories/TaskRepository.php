@@ -21,7 +21,7 @@ class TaskRepository implements TaskRepositoryInterface
     public function getUserTasks($userId): Collection
     {
         return Task::where('user_id', $userId)
-            ->orderBy('id', 'desc')->get();
+            ->orderBy('order', 'asc')->get();
     }
 
     /**
