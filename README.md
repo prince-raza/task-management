@@ -145,6 +145,34 @@ This will start:
 ./vendor/bin/sail composer run test
 ```
 
+#### Pest Testing
+
+Laravel is configured to use [Pest](https://pestphp.com) for expressive testing. The default test suite already uses Pest syntax, so you can keep writing tests with Pest’s expectations and dataset helpers.
+
+- **Run the full Pest suite**:
+  ```bash
+  ./vendor/bin/sail ./vendor/bin/pest
+  ```
+- **Running a specific Pest test file**:
+  ```bash
+  ./vendor/bin/sail ./vendor/bin/pest tests/Feature/TaskTest.php
+  ```
+- **Filtering by test name**:
+  ```bash
+  ./vendor/bin/sail ./vendor/bin/pest --filter="tasks_can_be_completed"
+  ```
+- **Watching tests** (reruns on file changes, requires `symfony/process` which is already included):
+  ```bash
+  ./vendor/bin/sail ./vendor/bin/pest --watch
+  ```
+
+You can generate new Pest tests with artisan:
+```bash
+./vendor/bin/sail artisan pest:test TaskStatusTest
+```
+
+Refer to `tests/Feature` and `tests/Unit` for examples of how to structure Pest tests in this project.
+
 ### API Endpoints
 
 The backend provides a RESTful API. Make sure to configure your frontend to point to the correct API base URL (default with Sail: `http://localhost` or the port specified in `APP_PORT` environment variable).
