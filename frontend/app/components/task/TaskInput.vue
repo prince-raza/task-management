@@ -33,7 +33,7 @@
       <input
         v-model="taskText"
         type="text"
-        :placeholder="placeholder"
+        placeholder="Add a new task..."
         class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
       />
 
@@ -49,14 +49,6 @@
       </button>
     </div>
 
-    <button
-      v-if="isEditing"
-      @click="cancelEdit"
-      type="button"
-      class="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium whitespace-nowrap"
-    >
-      Cancel
-    </button>
   </form>
 </template>
 
@@ -66,8 +58,6 @@ import { CircleArrowUp } from "lucide-vue-next";
 
 interface Emits {
   (e: "add-task", task: string): void;
-  (e: "edit-task", payload: { id: number; description: string }): void;
-  (e: "cancel-edit"): void;
 }
 
 interface Props {
@@ -80,50 +70,15 @@ const emit = defineEmits<Emits>();
 
 // Reactive state
 const taskText = ref("");
-const isEditing = ref(false);
-const currentEditId = ref<number | null>(null);
 
 // Computed properties
-const showEmptyState = computed(() => props.isEmptyList && !isEditing.value);
-const placeholder = computed(() => 
-  isEditing.value ? "Edit task..." : "Add a new task..."
-);
+const showEmptyState = computed(() => props.isEmptyList);
 
 // Methods
 const submitTask = () => {
   if (taskText.value.trim() === "") return;
-
-  if (isEditing.value && currentEditId.value !== null) {
-    emit("edit-task", {
-      id: currentEditId.value,
-      description: taskText.value.trim(),
-    });
-    resetForm();
-  } else {
-    emit("add-task", taskText.value.trim());
-    taskText.value = "";
-  }
-};
-
-const cancelEdit = () => {
-  resetForm();
-  emit("cancel-edit");
-};
-
-const resetForm = () => {
+  emit("add-task", taskText.value.trim());
   taskText.value = "";
-  isEditing.value = false;
-  currentEditId.value = null;
 };
 
-const startEdit = (task: { id: number; description: string }) => {
-  taskText.value = task.description;
-  isEditing.value = true;
-  currentEditId.value = task.id;
-};
-
-// Expose API
-defineExpose({
-  startEdit,
-});
 </script>

@@ -4,7 +4,6 @@
     <AuthLoginForm
       v-if="!isAuthenticated"
       :is-logging-in="isLoggingIn"
-      :error="loginError"
       @submit="handleLogin"
     />
 
@@ -45,7 +44,6 @@
           </div>
 
           <TaskInput
-            ref="taskInputRef"
             @add-task="handleTaskSubmit"
             :key="searchQuery"
             :isEmptyList="displayedTasks.length === 0 && !searchQuery"
@@ -75,7 +73,6 @@ const tasks = useTasksStore();
 const { getToday } = useDate();
 
 // Refs
-const taskInputRef = ref();
 const searchQuery = ref("");
 const selectedDate = ref<string | null>(null);
 const isAuthReady = ref(false);
@@ -83,7 +80,6 @@ const isAuthReady = ref(false);
 // Computed properties
 const isAuthenticated = computed(() => auth.isAuthenticated());
 const isLoggingIn = computed(() => auth.isLoggingIn);
-const loginError = computed(() => auth.loginError);
 const currentUser = computed(() => auth.user);
 const groupedDates = computed(() => tasks.groupedDates);
 
@@ -121,7 +117,6 @@ const clearSearch = () => {
 
 const handleLogin = async (credentials: { email: string; password: string }) => {
   auth.isLoggingIn = true;
-  auth.loginError = "";
 
   try {
     const response = await fetch(`${apiBase}/api/login`, {
@@ -136,12 +131,9 @@ const handleLogin = async (credentials: { email: string; password: string }) => 
       auth.setAuth(data.token, data.user);
       selectedDate.value = getToday();
       await tasks.fetchTasks(apiBase);
-    } else {
-      auth.loginError = data.message || "Login failed";
     }
   } catch (error) {
     console.error("Login error:", error);
-    auth.loginError = "An error occurred during login";
   } finally {
     auth.isLoggingIn = false;
   }

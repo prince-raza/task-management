@@ -123,7 +123,6 @@ export const useTasksStore = defineStore('tasks', () => {
     allTasks,
     fetchTasks,
     addTask,
-    showSampleDates,
     getTasksByDate,
     groupedDates
   }

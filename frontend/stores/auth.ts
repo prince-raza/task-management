@@ -5,7 +5,6 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(null)
   const user = ref<any>(null)
   const isLoggingIn = ref(false)
-  const loginError = ref('')
 
   const init = () => {
     const t = localStorage.getItem('auth_token')
@@ -44,7 +43,6 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     isLoggingIn,
-    loginError,
     init,
     setAuth,
     clearAuth,
