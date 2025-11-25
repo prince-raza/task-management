@@ -59,6 +59,7 @@ import { ref, onMounted, computed } from "vue";
 import { useRuntimeConfig } from "nuxt/app";
 import { useAuthStore } from "../stores/auth";
 import { useTasksStore } from "../stores/tasks";
+import type { Task } from "../stores/tasks";
 import { useDate } from "./composables/useDate";
 
 // Configuration
@@ -141,7 +142,7 @@ const handleLogin = async (credentials: { email: string; password: string }) => 
 
 const handleLogout = () => {
   auth.clearAuth();
-  tasks.allDates = [];
+  tasks.reset();
   selectedDate.value = null;
   clearSearch();
 };
@@ -159,102 +160,20 @@ const handleTaskSubmit = async (taskDescription: string) => {
 };
 
 const handleToggleTask = async (taskId: number) => {
-  try {
-    const token = auth.token;
-    const task = tasks.allTasks.find(t => t.id === taskId);
-    if (!task) return;
-
-    const newStatus = task.status === "completed" ? "pending" : "completed";
-
-    const res = await fetch(`${apiBase}/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ status: newStatus }),
-    });
-
-    if (res.ok) {
-      await tasks.fetchTasks(apiBase);
-    } else {
-      console.error("Failed to toggle task", res.status);
-    }
-  } catch (error) {
-    console.error("Error toggling task:", error);
-  }
+  await tasks.toggleTaskStatus(apiBase, taskId);
 };
 
 const handleDeleteTask = async (taskId: number) => {
-  try {
-    const token = auth.token;
-    const res = await fetch(`${apiBase}/api/tasks/${taskId}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (res.ok) {
-      await tasks.fetchTasks(apiBase);
-    } else {
-      console.error("Failed to delete task", res.status);
-    }
-  } catch (error) {
-    console.error("Error deleting task:", error);
-  }
+  await tasks.deleteTask(apiBase, taskId);
 };
 
 const handleEditTask = async (payload: { id: number; description: string }) => {
-  try {
-    const token = auth.token;
-    const res = await fetch(`${apiBase}/api/tasks/${payload.id}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ description: payload.description }),
-    });
-
-    if (res.ok) {
-      await tasks.fetchTasks(apiBase);
-    } else {
-      console.error("Failed to edit task", res.status);
-    }
-  } catch (error) {
-    console.error("Error editing task:", error);
-  }
+  console.log("is Edited");
+  await tasks.editTaskDescription(apiBase, payload);
 };
 
-const saveOrder = async (newList: typeof tasks.allTasks) => {
-  try {
-    const token = auth.token;
-    const orderedIds = newList.map((t, index) => ({
-      id: t.id,
-      order: index + 1,
-    }));
-
-    const res = await fetch(`${apiBase}/api/tasks-order`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ ordered: orderedIds }),
-    });
-
-    if (res.ok) {
-      tasks.allTasks = newList;
-    } else {
-      console.error("Failed to save task order", res.status);
-      await tasks.fetchTasks(apiBase);
-    }
-  } catch (error) {
-    console.error("Error saving task order:", error);
-    await tasks.fetchTasks(apiBase);
-  }
+const saveOrder = async (newList: Task[]) => {
+  await tasks.saveTaskOrder(apiBase, newList);
 };
 
 // Lifecycle

@@ -62,6 +62,7 @@
             </button>
             <button
               v-else
+              @mousedown.prevent
               @click="saveEdit(task)"
               class="text-black text-sm"
             >
@@ -70,6 +71,7 @@
 
             <button
               v-if="task.isEditing"
+              @mousedown.prevent
               @click="cancelEdit(task)"
               class="text-black text-sm"
             >
@@ -149,6 +151,7 @@ const startEditing = (task: Task) => {
 };
 
 const saveEdit = (task: Task) => {
+  console.log("EDITTTT");
   if (task.editingText?.trim()) {
     emit("edit-task", {
       id: task.id,

@@ -78,6 +78,134 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
+  const toggleTaskStatus = async (apiBase: string, taskId: number) => {
+    try {
+      const auth = useAuthStore()
+      const token = auth.token
+      const task = allTasks.value.find((t) => t.id === taskId)
+
+      if (!task) {
+        console.warn('Task not found when trying to toggle status')
+        return false
+      }
+
+      const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+
+      const res = await fetch(`${apiBase}/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (res.ok) {
+        await fetchTasks(apiBase)
+        return true
+      }
+
+      console.error('Failed to toggle task', res.status)
+      return false
+    } catch (error) {
+      console.error('Error toggling task:', error)
+      return false
+    }
+  }
+
+  const deleteTask = async (apiBase: string, taskId: number) => {
+    try {
+      const auth = useAuthStore()
+      const token = auth.token
+      const res = await fetch(`${apiBase}/api/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (res.ok) {
+        await fetchTasks(apiBase)
+        return true
+      }
+
+      console.error('Failed to delete task', res.status)
+      return false
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      return false
+    }
+  }
+
+  const editTaskDescription = async (
+    apiBase: string,
+    payload: { id: number; description: string }
+  ) => {
+    try {
+      const auth = useAuthStore()
+      const token = auth.token
+      const res = await fetch(`${apiBase}/api/tasks/${payload.id}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ description: payload.description })
+      })
+
+      if (res.ok) {
+        await fetchTasks(apiBase)
+        return true
+      }
+
+      console.error('Failed to edit task', res.status)
+      return false
+    } catch (error) {
+      console.error('Error editing task:', error)
+      return false
+    }
+  }
+
+  const saveTaskOrder = async (apiBase: string, newList: Task[]) => {
+    try {
+      const auth = useAuthStore()
+      const token = auth.token
+
+      const orderedIds = newList.map((t, index) => ({
+        id: t.id,
+        order: index + 1
+      }))
+
+      const res = await fetch(`${apiBase}/api/tasks-order`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ordered: orderedIds })
+      })
+
+      if (res.ok) {
+        allTasks.value = newList
+        return true
+      }
+
+      console.error('Failed to save task order', res.status)
+      await fetchTasks(apiBase)
+      return false
+    } catch (error) {
+      console.error('Error saving task order:', error)
+      await fetchTasks(apiBase)
+      return false
+    }
+  }
+
+  const reset = () => {
+    allDates.value = []
+    allTasks.value = []
+  }
+
   const showSampleDates = () => {
     const today = new Date().toISOString().split('T')[0]
     const dates: string[] = []
@@ -123,6 +251,11 @@ export const useTasksStore = defineStore('tasks', () => {
     allTasks,
     fetchTasks,
     addTask,
+    toggleTaskStatus,
+    deleteTask,
+    editTaskDescription,
+    saveTaskOrder,
+    reset,
     getTasksByDate,
     groupedDates
   }
